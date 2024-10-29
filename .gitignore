@@ -20,6 +20,8 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+media/
+manim
 
 # Virtual Environment
 venv/
