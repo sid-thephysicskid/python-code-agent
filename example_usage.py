@@ -22,7 +22,7 @@ prompt3 = """Create a manim animation demonstrating Gaussian elimination on a 3x
 prompt4 = """Show how voltage, current, and resistance relate in a circuit using Ohm's Law (V=IR)"""
 
 try:
-    result = agent.solve(prompt4)
+    result = agent.solve(prompt)
     print(f"\nAnimation created successfully in {result['iterations']} iterations!")
     print("\nFinal Manim code:")
     print(result["implementation"])

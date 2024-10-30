@@ -38,14 +38,38 @@ class ManimAgent(Scene):
     def generate_test(self, prompt: str) -> str:
         """Generate Manim-specific test code."""
         system_prompt = """You are an expert Manim developer creating pytest tests.
-        Create precise tests that verify:
-        1. Scene initialization and structure
-        2. Correct creation of geometric objects (Circle, Square)
-        3. Proper mathematical text rendering using MathTex for area equations
-        4. Animation sequence and transformations
-        5. Final state of the scene
-        
-        DO NOT add unnecessary constraints like equal areas between shapes unless specifically requested."""
+        Create precise pytest test functions that verify:
+        1. Scene initialization and structure using assert statements
+        2. Correct creation and properties of geometric objects
+        3. Proper mathematical text content and formatting
+        4. Animation sequence presence and order
+        5. Final state of objects in the scene
+
+        Example test structure:
+        ```python
+        def test_scene_initialization():
+            scene = MyScene()
+            assert isinstance(scene, Scene)
+            
+        def test_geometric_objects():
+            scene = MyScene()
+            scene.construct()
+            # Test specific object properties
+            assert isinstance(scene.circle, Circle)
+            assert scene.circle.radius == 2
+            
+        def test_mathematical_text():
+            scene = MyScene()
+            scene.construct()
+            assert scene.equation.tex_string == r"A = \pi r^2"
+            
+        def test_animation_sequence():
+            scene = MyScene()
+            animations = scene.get_animation_sequence()
+            assert len(animations) > 0
+            assert isinstance(animations[0], Create)
+        ```
+        """
 
         try:
             response = self.client.messages.create(
@@ -75,25 +99,62 @@ class ManimAgent(Scene):
         """Generate Manim implementation code."""
         context = self._build_implementation_context()
         
+        system_prompt = """You are an expert Manim developer.
+        Create a precise, working implementation following these guidelines and examples:
+        
+        1. Basic Scene Structure:
+        ```python
+        class MyScene(Scene):
+            def construct(self):
+                # Always use self.play for animations
+                # Always include appropriate self.wait() calls
+                self.wait()
+        ```
+        
+        2. Mathematical Expressions:
+        ```python
+        # Use raw strings for LaTeX
+        equation = MathTex(r"\frac{d}{dx}[f(g(x))] = f'(g(x)) \cdot g'(x)")
+        # For dynamic values
+        value = 5
+        result = MathTex(r"\text{Result} = " + f"{value}")
+        ```
+        
+        3. Transformations and Animations:
+        ```python
+        # Proper transformation
+        self.play(Transform(start_obj, end_obj))
+        # Multiple animations
+        self.play(
+            Create(circle),
+            Write(equation),
+            run_time=2
+        )
+        ```
+        
+        4. Object Positioning:
+        ```python
+        # Relative positioning
+        equation.next_to(circle, DOWN)
+        # Absolute positioning
+        equation.move_to(UP * 2 + LEFT * 3)
+        # Alignment
+        VGroup(eq1, eq2, eq3).arrange(DOWN, buff=0.5)
+        ```
+        
+        5. Color and Style:
+        ```python
+        text = Text("Important", color=RED)
+        circle = Circle(radius=2, stroke_color=BLUE, fill_color=BLUE, fill_opacity=0.5)
+        ```
+        """
+        
         try:
             response = self.client.messages.create(
                 model=self.model,
                 max_tokens=2000,
                 temperature=0.7,
-                system="""You are an expert Manim developer.
-                Create a precise, working implementation following these guidelines:
-                1. Use proper Manim syntax and conventions
-                2. Create smooth animations with appropriate timing
-                3. Position objects carefully using next_to() or move_to()
-                4. Use MathTex for mathematical formulas with proper escaping
-                5. Handle transformations properly with self.play()
-                6. Consider the viewing window and object scales
-                7. Ensure all f-strings are properly formatted
-                8. Use raw strings (r) for LaTeX expressions
-                
-                Example of correct MathTex and f-string usage:
-                final_det_text = MathTex(r"\\text{Final det} = " + f"{final_det:.2f}")
-                """,
+                system=system_prompt,
                 messages=[{
                     "role": "user",
                     "content": f"""Create a Manim implementation for: {prompt}
